@@ -3,22 +3,28 @@ package com.spider.manager.service.impl;
 import java.text.MessageFormat;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.google.common.base.Preconditions;
+import com.spider.db.entity.BasketballOddsEntity;
+import com.spider.db.entity.BasketballScoreEntity;
 import com.spider.db.entity.CompanyOddsEntity;
 import com.spider.db.entity.ManualMatchesEntity;
 import com.spider.db.entity.NowgoalScoreEntity;
 import com.spider.db.entity.TCrawlerWin310;
 import com.spider.db.entity.W500Entity;
+import com.spider.db.repository.BasketballOddsRepository;
+import com.spider.db.repository.BasketballScoreRepository;
 import com.spider.db.repository.CompanyOddsRepository;
 import com.spider.db.repository.ManualMatchesRepository;
 import com.spider.db.repository.NowgoalScoreRepository;
 import com.spider.db.repository.TCrawlerWin310Repository;
 import com.spider.db.repository.W500Repository;
+import com.spider.domain.UpdateBasketballOdds;
+import com.spider.domain.UpdateBasketballScore;
 import com.spider.domain.UpdateHdcOdds;
 import com.spider.domain.UpdateHiloOdds;
 import com.spider.domain.UpdateScoreAndHalf;
@@ -54,6 +60,21 @@ public class SbcServiceImpl implements SbcService {
 
 	@Value("${inplay.odds.topic.parameter}")
 	private String inplayParameterTopic;
+	
+	@Value("${basketball.odds.topic}")
+	private String basketballOddsTopic;
+	
+	@Value("${basketball.score.topic}")
+	private String basketballScoreTopic;
+	
+	@Value("${basketball.odds.hdc.tag}")
+	private String basketballHdcOddsTag;
+	
+	@Value("${basketball.odds.hilo.tag}")
+	private String basketballHiloOddsTag;
+	
+	@Value("${basketball.score.tag}")
+	private String basketballScoreTag;
 
 	@Autowired
 	private SbcUpdateManager sbcUpdateManager;
@@ -72,6 +93,12 @@ public class SbcServiceImpl implements SbcService {
 	
 	@Autowired
 	private NowgoalScoreRepository nowgoalScoreRepository;
+	
+	@Autowired
+	private BasketballScoreRepository basketballScoreRepository;
+	
+	@Autowired
+	private BasketballOddsRepository basketballOddsRepository;
 
 	/**
 	 * 同步赔率信息，根据id进行查找
@@ -85,7 +112,9 @@ public class SbcServiceImpl implements SbcService {
 	@Override
 	public JsonResult syncOdds(String id) {
 
-		Preconditions.checkNotNull(id);
+		if (StringUtils.isEmpty(id)) {
+			return null;
+		}
 
 		try {
 			CompanyOddsEntity odds = companyOddsRepository.findOne(Long.valueOf(id));
@@ -102,8 +131,7 @@ public class SbcServiceImpl implements SbcService {
 						.findByEuropeId(odds.getEuropeId().toString());
 				if (manualMatchesEntity == null) {
 					logger.error("no this win310 and manualMatch, europeId is [" + europeId + "]");
-					return new JsonResult(2,
-							"no this win310 and manualMatch, europeId is [" + europeId + "]");
+					return new JsonResult(2, "no this win310 and manualMatch, europeId is [" + europeId + "]");
 				}
 				String uniqueId = manualMatchesEntity.getUniqueId().toString();
 				matchCode = uniqueId.substring(uniqueId.length() - 4);
@@ -183,7 +211,7 @@ public class SbcServiceImpl implements SbcService {
 			} else {
 				europeId = Integer.valueOf(win310.getWin310EuropeId());
 			}
-			w500Entity = w500Repository.findByMatchCode(uniqueId);
+			w500Entity = w500Repository.findByUniqueId(Long.valueOf(uniqueId));
 			if (w500Entity == null && manualMatchesEntity == null) {
 				logger.error("no w500 entity or manualMatch  for this uniqueId [" + uniqueId + "]");
 				return new JsonResult(1, "no w500 and manualMatch entity for this uniqueId [" + uniqueId + "]");
@@ -276,4 +304,57 @@ public class SbcServiceImpl implements SbcService {
 		sbcUpdateManager.update(scoreAndHalf, scoreAndHalfTag, inplayParameterTopic);
 	}
 
+	@Override
+	public JsonResult syncBasketball(String uniqueId, Integer type) {
+		try {
+			BasketballScoreEntity basketballScoreEntity = basketballScoreRepository.findByUniqueId(Long.valueOf(uniqueId));
+			if (basketballScoreEntity == null) {
+				logger.warn("No Match Score Found. UniqueId: " + uniqueId);
+			} else {
+				UpdateBasketballScore updateBasketballScore = new UpdateBasketballScore(basketballScoreEntity);
+				sbcUpdateManager.update(updateBasketballScore, basketballScoreTag, basketballScoreTopic);
+			}
+			
+			if (type == null) {
+//				List<BasketballOddsEntity> basketballOddsEntities = basketballOddsRepository.findByEuropeId(basketballScoreEntity.getEuropeId());
+				List<BasketballOddsEntity> basketballOddsEntities = basketballOddsRepository.findByUniqueId(Long.valueOf(uniqueId));
+				if (basketballOddsEntities == null || basketballOddsEntities.isEmpty()) {
+					logger.warn("No Match Odds Found. UniqueId: " + uniqueId);
+				} else {
+					for (BasketballOddsEntity basketballOddsEntity : basketballOddsEntities) {
+						sendBasketballOdds(basketballOddsEntity);
+					}
+				}
+			}
+		} catch (UpdateException e) {
+			e.printStackTrace();
+			logger.error("uniqueId: " + uniqueId, e);
+			return new JsonResult(1, "Error Occured. " + e);
+		}
+		return JsonResult.SUCCESS;
+	}
+
+	@Override
+	public JsonResult syncBasketballOdds(String id) {
+		try {
+			BasketballOddsEntity basketballOddsEntity = basketballOddsRepository.findOne(Long.valueOf(id));
+			sendBasketballOdds(basketballOddsEntity);
+		} catch (UpdateException e) {
+			e.printStackTrace();
+			logger.error(id, e);
+		}
+		return JsonResult.SUCCESS;
+	}
+	
+	private void sendBasketballOdds(BasketballOddsEntity basketballOddsEntity) throws UpdateException {
+		UpdateBasketballOdds updateBasketballOdds = new UpdateBasketballOdds(basketballOddsEntity);
+		if (basketballOddsEntity.getOddsType().equals(0)) {
+			sbcUpdateManager.update(updateBasketballOdds, basketballHdcOddsTag, basketballOddsTopic);
+		} else if (basketballOddsEntity.getOddsType().equals(1)) {
+			sbcUpdateManager.update(updateBasketballOdds, basketballHiloOddsTag, basketballOddsTopic);
+		} else {
+			throw new UpdateException("Odds Type Error. Please Check basketball_odds. EuropeId: " + basketballOddsEntity.getEuropeId());
+		}
+	}
+	
 }

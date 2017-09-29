@@ -1,7 +1,5 @@
 package com.spider.manager.controller;
 
-import java.util.List;
-
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,7 +64,34 @@ public class SbcSyncController {
     	response.setHeader("Access-Control-Allow-Origin", "*");
     	String queryNowgoalURL = sbcService.queryNowgoalURL(matchCode);
         return queryNowgoalURL;
-//    	return "http://data.nowgoal.com/3in1odds/1376093.html";
+    }
+    
+    /**
+     * @param matchCode
+     * @param type
+     * @return
+     * @see SbcService
+     */
+    @RequestMapping(value = "/syncBasketball.do", method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE})
+    @ResponseBody
+    public JsonResult syncBasketballScore(@RequestParam String matchCode, @RequestParam(required = false) Integer type) {
+
+        return sbcService.syncBasketball(matchCode, type);
+    }
+
+    /**
+     * @param id
+     * @return
+     * @see SbcService
+     */
+    @RequestMapping(value = "/syncBasketballOdds", method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE})
+    @ResponseBody
+    public JsonResult syncsyncBasketballOdds(@RequestParam String id) {
+    	String[] split = id.split(",");
+    	for (int i = 0; i < split.length; i++) {
+			sbcService.syncBasketballOdds(split[i]);
+		}
+        return JsonResult.SUCCESS;
     }
 
 }

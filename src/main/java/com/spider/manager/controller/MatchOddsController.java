@@ -5,12 +5,13 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import jxl.Workbook;
 import jxl.write.Label;
 import jxl.write.WritableSheet;
 import jxl.write.WritableWorkbook;
+import jxl.write.WriteException;
+import jxl.write.biff.RowsExceededException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,10 +27,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.alibaba.fastjson.JSON;
 import com.spider.config.SearchDateAspect;
+import com.spider.db.entity.BasketballOddsAllEntity;
+import com.spider.db.entity.BasketballSportteryEntity;
 import com.spider.db.entity.OddsModel;
+import com.spider.manager.model.BasketballOddsModel;
 import com.spider.manager.model.DownloadFileResult;
 import com.spider.manager.model.SportteryAllModel;
-import com.spider.manager.model.SupAndTtgModel;
 import com.spider.manager.service.MatchOddsServcie;
 import com.spider.utils.DateUtils;
 import com.spider.utils.ExcelUtils;
@@ -72,7 +75,23 @@ public class MatchOddsController {
 
         return matchOddsService.listOdds(startDate, endDate);
     }
+    
+    @RequestMapping(value = "/listBasketballOdds", method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE})
+    @ResponseBody
+    public List<BasketballOddsAllEntity> listBasketballOdds(@RequestParam Date startDate, @RequestParam Date endDate) {
+    	
+        return matchOddsService.listBasketballOdds(startDate, endDate);
+    }
 
+    
+    /**
+     * basketball odd page
+     * */
+    @RequestMapping(value="/listBasketballoddPage")
+    public String basketballListoddPage(){
+    	return "listBasketballodd";
+    }
+    
     /**
      * 刷新某个赔率
      *
@@ -194,5 +213,99 @@ public class MatchOddsController {
             ExcelUtils.close(workbook);
         }
         return new DownloadFileResult(fileName);
+    }
+    
+
+    
+
+
+    @RequestMapping(value = "/matchBasketballOddsExcel", produces = {MediaType.APPLICATION_JSON_VALUE}, method = RequestMethod.POST)
+    @ResponseBody
+    public DownloadFileResult basketballExcel(@RequestParam String oddsModels) {
+
+        String fileName = "odds" + DateUtils.getNowStr("yyyyMMdd_HHmmss") + ".xls";
+        
+        WritableWorkbook workbook = null;
+        List<BasketballOddsModel> basketballOddsModels = JSON.parseArray(oddsModels, BasketballOddsModel.class);
+        try {
+            workbook = Workbook.createWorkbook(new File(downloadXlsPath + fileName));
+            WritableSheet sheet = workbook.createSheet(SHEET_NAME, 0);
+            fillInTitle(sheet);
+            for (int i = 1, j = 0; j < basketballOddsModels.size(); i++, j++) {
+            	int index = 0;
+            	BasketballOddsModel basketballOddsModel = basketballOddsModels.get(j);
+            	sheet.addCell(new Label(index++, i, basketballOddsModel.getBasketballSportteryEntity().getStartDate().toString()));
+    			sheet.addCell(new Label(index++, i, basketballOddsModel.getMatchCode()));
+    			sheet.addCell(new Label(index++, i, basketballOddsModel.getMatchLeague()));
+    			sheet.addCell(new Label(index++, i, basketballOddsModel.getBasketballSportteryEntity().getHomeTeam()));
+    			sheet.addCell(new Label(index++, i, basketballOddsModel.getBasketballSportteryEntity().getAwayTeam()));
+    			sheet.addCell(new Label(index++, i, basketballOddsModel.getSportteryHdcLines()));
+    			sheet.addCell(new Label(index++, i, basketballOddsModel.getSportteryHdcHome()));
+    			sheet.addCell(new Label(index++, i, basketballOddsModel.getSportteryHdcAway()));
+    			sheet.addCell(new Label(index++, i, basketballOddsModel.getSportteryHiloLines()));
+    			sheet.addCell(new Label(index++, i, basketballOddsModel.getSportteryHiloHigh()));
+    			sheet.addCell(new Label(index++, i, basketballOddsModel.getSportteryHiloLow()));
+    			BasketballSportteryEntity basketballSportteryEntity = basketballOddsModel.getBasketballSportteryEntity();
+    			sheet.addCell(new Label(index++, i, basketballSportteryEntity.getMnlHome() == null ? "" : basketballSportteryEntity.getMnlHome().toString()));
+    			sheet.addCell(new Label(index++, i, basketballSportteryEntity.getMnlAway() == null ? "" : basketballSportteryEntity.getMnlAway().toString()));
+    			sheet.addCell(new Label(index++, i, basketballSportteryEntity.getWnmHome15() == null ? "" : basketballSportteryEntity.getWnmHome15().toString()));
+    			sheet.addCell(new Label(index++, i, basketballSportteryEntity.getWnmHome610() == null ? "" : basketballSportteryEntity.getWnmHome610().toString()));
+    			sheet.addCell(new Label(index++, i, basketballSportteryEntity.getWnmHome1115() == null ? "" : basketballSportteryEntity.getWnmHome1115().toString()));
+    			sheet.addCell(new Label(index++, i, basketballSportteryEntity.getWnmHome1620() == null ? "" : basketballSportteryEntity.getWnmHome1620().toString()));
+    			sheet.addCell(new Label(index++, i, basketballSportteryEntity.getWnmHome2125() == null ? "" : basketballSportteryEntity.getWnmHome2125().toString()));
+    			sheet.addCell(new Label(index++, i, basketballSportteryEntity.getWnmHome26Plus() == null ? "" : basketballSportteryEntity.getWnmHome26Plus().toString()));
+    			sheet.addCell(new Label(index++, i, basketballSportteryEntity.getWnmAway15() == null ? "" : basketballSportteryEntity.getWnmAway15().toString()));
+    			sheet.addCell(new Label(index++, i, basketballSportteryEntity.getWnmAway610() == null ? "" : basketballSportteryEntity.getWnmAway610().toString()));
+    			sheet.addCell(new Label(index++, i, basketballSportteryEntity.getWnmAway1115() == null ? "" : basketballSportteryEntity.getWnmAway1115().toString()));
+    			sheet.addCell(new Label(index++, i, basketballSportteryEntity.getWnmAway1620() == null ? "" : basketballSportteryEntity.getWnmAway1620().toString()));
+    			sheet.addCell(new Label(index++, i, basketballSportteryEntity.getWnmAway2125() == null ? "" : basketballSportteryEntity.getWnmAway2125().toString()));
+    			sheet.addCell(new Label(index++, i, basketballSportteryEntity.getWnmAway26Plus() == null ? "" : basketballSportteryEntity.getWnmAway26Plus().toString()));
+			}
+            workbook.write();
+        } catch (Exception e) {
+        	e.printStackTrace();
+        } finally {
+            ExcelUtils.close(workbook);
+        }
+       
+        return new DownloadFileResult(fileName);
+    }
+    
+    private static WritableSheet fillInTitle(WritableSheet sheet) {
+    	int index = 0;
+    	try {
+    		sheet.addCell(new Label(index++, 0, "match_date"));
+			sheet.addCell(new Label(index++, 0, "match_code"));
+			sheet.addCell(new Label(index++, 0, "match_league"));
+			sheet.addCell(new Label(index++, 0, "home_team"));
+			sheet.addCell(new Label(index++, 0, "away_team"));
+			sheet.addCell(new Label(index++, 0, "hdc_lines"));
+			sheet.addCell(new Label(index++, 0, "hdc_home"));
+			sheet.addCell(new Label(index++, 0, "hdc_away"));
+			sheet.addCell(new Label(index++, 0, "hilo_lines"));
+			sheet.addCell(new Label(index++, 0, "hilo_high"));
+			sheet.addCell(new Label(index++, 0, "hilo_low"));
+			sheet.addCell(new Label(index++, 0, "mnl_home"));
+			sheet.addCell(new Label(index++, 0, "mnl_away"));
+			sheet.addCell(new Label(index++, 0, "wnm_home_15"));
+			sheet.addCell(new Label(index++, 0, "wnm_home_610"));
+			sheet.addCell(new Label(index++, 0, "wnm_home_1115"));
+			sheet.addCell(new Label(index++, 0, "wnm_home_1620"));
+			sheet.addCell(new Label(index++, 0, "wnm_home_2125"));
+			sheet.addCell(new Label(index++, 0, "wnm_home_26plus"));
+			sheet.addCell(new Label(index++, 0, "wnm_away_15"));
+			sheet.addCell(new Label(index++, 0, "wnm_away_610"));
+			sheet.addCell(new Label(index++, 0, "wnm_away_1115"));
+			sheet.addCell(new Label(index++, 0, "wnm_away_1620"));
+			sheet.addCell(new Label(index++, 0, "wnm_away_2125"));
+			sheet.addCell(new Label(index++, 0, "wnm_away_26plus"));
+    	
+    	} catch (RowsExceededException e) {
+			e.printStackTrace();
+		} catch (WriteException e) {
+			e.printStackTrace();
+		}
+    
+    	return sheet;
     }
 }

@@ -14,14 +14,6 @@ import java.text.MessageFormat;
  */
 public class LogHelper {
 
-    public static <T> void infoLog(Logger logger, Exception e, String info, Object... params) {
-
-        if (params != null && params.length > 0) {
-            info = MessageFormat.format(info, params);
-        }
-        logger.info(info);
-    }
-
     public static <T> void errorLog(Logger logger, Exception e, String info, Object... params) {
 
         if (params != null && params.length > 0) {

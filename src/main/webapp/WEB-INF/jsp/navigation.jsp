@@ -24,4 +24,22 @@
     <a href="manualMatchesPage">
         <li class="list-group-item">手动添加比赛</li>
     </a>
+    
+	<a href="listBasketballMatchLeaguePage">
+        <li class="list-group-item">篮球联赛列表</li>
+    </a>
+    
+    <a href="listBasketballMatchPage">
+        <li class="list-group-item">篮球赛事列表</li>
+    </a>
+    
+    <a href="listBasketballoddPage">
+        <li class="list-group-item">篮球赔率信息</li>
+    </a>
+    
+	<a href="listBasketballProductPage">
+        <li class="list-group-item">篮球奖池信息</li>
+    </a>
+   
+    
 </ul>

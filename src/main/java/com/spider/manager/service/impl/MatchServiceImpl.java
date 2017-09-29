@@ -91,6 +91,46 @@ public class MatchServiceImpl implements MatchService {
         }
         return matchList;
     }
+    
+    @Autowired
+    private BasketballSportteryRepository basketballSportteryRepository;
+    
+    @Override
+    public List<MatchModel> listBasketballMatch(Date startDate, Date endDate) {
+
+        Preconditions.checkNotNull(startDate);
+        Preconditions.checkNotNull(endDate);
+
+        List<MatchModel> matchList = new ArrayList<>();
+        
+        List<BasketballSportteryEntity> basketballSportteryEntities = basketballSportteryRepository.findByStartDateBetween(startDate, endDate);
+        
+        if (basketballSportteryEntities == null || basketballSportteryEntities.size() == 0) {
+            return matchList;
+        }
+        
+//        List<String> uniqueIds = LotteryUtils.getUniqueId(sportteryList);
+//        List<String> absenceMatchSet = getAbsenceUniqueId(uniqueIds);
+        for (BasketballSportteryEntity basketballSportteryEntity : basketballSportteryEntities) {
+        	try{
+        		
+//        		TCrawlerWin310 win310 = win310Repository.findByStartDateTimeAndUniqueId(sporttery.getStartDateTime(), sporttery.getUniqueId());
+        		MatchModel matchModel = new MatchModel();
+        		matchModel.setId(basketballSportteryEntity.getId());
+        		matchModel.setMatchDate(DateUtils.getDate("yyyy-MM-dd HH:mm:ss", basketballSportteryEntity.getStartDate()));
+        		matchModel.setMatchCode(basketballSportteryEntity.getMatchCode());
+        		matchModel.setMatchLeague(basketballSportteryEntity.getLeague());
+        		matchModel.setHomeTeam(basketballSportteryEntity.getHomeTeam());
+        		matchModel.setAwayTeam(basketballSportteryEntity.getAwayTeam());
+//        		setModelState(sporttery, win310, absenceMatchSet, matchModel);
+        		matchList.add(matchModel);
+        	} catch (NonUniqueResultException | IncorrectResultSizeDataAccessException e) {
+        		win310Repository.deleteNonUniqueResult();
+        		duplicateLogger.error("duplicate win310:" + basketballSportteryEntity.getMatchCode(), e);
+        	}
+        }
+        return matchList;
+    }
 
     @Override
     public List<MatchPlayerInfoModel> listMatchByLeague(Date startDate, Date endDate, String league) {
@@ -177,7 +217,7 @@ public class MatchServiceImpl implements MatchService {
     }
 
     private boolean compareTwo(TCrawlerSporttery sporttery, TCrawlerWin310 win310) {// 判断竞猜官网和彩客是否匹配
-
+    	
         return true;// FIXME 暂时不处理
     }
 

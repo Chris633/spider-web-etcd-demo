@@ -72,12 +72,22 @@ public class MatchController {
         return matchService.listMatch(startDate, endDate);
     }
 
+    @RequestMapping(value="/listBasketballMatch")
+    @ResponseBody
+    public List<MatchModel> listBasketballListMatchPage(@RequestParam Date startDate, @RequestParam Date endDate){
+    	return matchService.listBasketballMatch(startDate, endDate);
+    }
+    
     @RequestMapping(value = "/listMatchPage")
     public String listMatchPage() {
-
         return "listMatch";
     }
-
+    
+    @RequestMapping(value="/listBasketballMatchPage")
+    public String listBasketballListMatchPage(){
+    	return "listBasketballMatch";
+    }
+    
     @RequestMapping(value = "/exportMatchInfoPage")
     public String exportMatchInfoPage() {
 

@@ -1,30 +1,38 @@
 package com.spider.manager.service.impl;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.persistence.NonUniqueResultException;
+
+import org.apache.commons.lang.time.DateFormatUtils;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.stereotype.Service;
+
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.spider.db.entity.BasketballLines;
+import com.spider.db.entity.BasketballSportteryEntity;
 import com.spider.db.entity.SportteryAllEntity;
 import com.spider.db.entity.TCrawlerSporttery;
 import com.spider.db.entity.TCrawlerWin310;
-import com.spider.manager.model.ProductModel;
+import com.spider.db.repository.BasketballLinesRepository;
+import com.spider.db.repository.BasketballSportteryRepository;
 import com.spider.db.repository.SportteryAllRepository;
 import com.spider.db.repository.TCrawlerSportteryRepository;
 import com.spider.db.repository.TCrawlerWin310Repository;
+import com.spider.manager.model.BasketballProductModel;
+import com.spider.manager.model.ProductModel;
 import com.spider.manager.service.MatchProductService;
 import com.spider.manager.service.MatchService;
 import com.spider.manager.service.SbcLeagueService;
 import com.spider.utils.DateUtils;
 import com.spider.utils.LogHelper;
 import com.spider.utils.LotteryUtils;
-
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.IncorrectResultSizeDataAccessException;
-import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import javax.persistence.NonUniqueResultException;
 
 @Service
 public class MatchProductServiceImpl implements MatchProductService {
@@ -41,7 +49,13 @@ public class MatchProductServiceImpl implements MatchProductService {
 
     @Autowired
     private SportteryAllRepository sportteryAllRepository;
+    
+    @Autowired
+    private BasketballLinesRepository basketballLinesRepository;
 
+    @Autowired
+    private BasketballSportteryRepository basketballSportteryRepository;
+    
     @Autowired
     private SbcLeagueService sbcLeagueService;
 
@@ -123,4 +137,45 @@ public class MatchProductServiceImpl implements MatchProductService {
 
         return true;// TODO: 2016/5/16 暂无实现
     }
+
+	@Override
+	public List<BasketballProductModel> listBasketballMatchProduct(Date startDate, Date endDate) {
+		
+		Preconditions.checkNotNull(startDate);
+        Preconditions.checkNotNull(endDate);
+		
+		List<BasketballSportteryEntity> basketballSportteryEntities = basketballSportteryRepository.findByStartDateBetween(startDate, endDate);
+		LinkedList<BasketballProductModel> result = Lists.newLinkedList();
+		if (basketballSportteryEntities == null) {
+			return result;
+		}
+		
+		List<String> uniqueIds = Lists.newArrayList();
+		for (BasketballSportteryEntity basketballSportteryEntity : basketballSportteryEntities) {
+			uniqueIds.add(String.valueOf(basketballSportteryEntity.getUniqueId()));
+		}
+        List<String> absenceMatchSet = matchService.getAbsenceUniqueId(uniqueIds);
+        
+		for (BasketballSportteryEntity basketballSportteryEntity : basketballSportteryEntities) {
+			BasketballProductModel basketballProductModel = new BasketballProductModel();
+			basketballProductModel.setId(basketballSportteryEntity.getId());
+			basketballProductModel.setMatchDate(DateFormatUtils.format(basketballSportteryEntity.getStartDate(), "yyyy-MM-dd HH:mm:ss"));
+			basketballProductModel.setMatchCode(basketballSportteryEntity.getMatchCode());
+			basketballProductModel.setMatchLeague(basketballSportteryEntity.getLeague());
+			basketballProductModel.setHomeTeam(basketballSportteryEntity.getHomeTeam());
+			basketballProductModel.setAwayTeam(basketballSportteryEntity.getAwayTeam());
+			BasketballLines basketballLines = basketballLinesRepository.findByUniqueId(basketballSportteryEntity.getUniqueId());
+			if (basketballLines != null) {
+				basketballProductModel.setHdcLines(basketballLines.getHdcLines());
+				basketballProductModel.setHdc(basketballLines.getHdcLines() != null ? "Y" : "N");
+				basketballProductModel.setHiloLines(basketballLines.getHiloLines());
+				basketballProductModel.setHilo(basketballLines.getHiloLines() != null ? "Y" : "N");
+			}
+			basketballProductModel.setMnl(basketballSportteryEntity.getMnlHome() != null ? "Y" : "N");
+			basketballProductModel.setWnm(basketballSportteryEntity.getWnmHome15() != null ? "Y" : "N");
+			basketballProductModel.setAbsenceState(absenceMatchSet.contains(String.valueOf(basketballSportteryEntity.getUniqueId())) ? MatchService.ABSENCE_STATE_YES : MatchService.ABSENCE_STATE_NO);
+			result.add(basketballProductModel);
+		}
+		return result;
+	}
 }

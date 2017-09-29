@@ -64,12 +64,12 @@
                 <th>MATCH LEAGUE</th>
                 <th>HOME TEAM</th>
                 <th>AWAY TEAM</th>
-                <th>HANDICAP LINE</th>
-                <th>HAD</th>
-                <th>HHAD</th>
-                <th>HAFU</th>
-                <th>CRS</th>
-                <th>TTG</th>
+                <th>HDC LINES</th>
+                <th>HDC</th>
+                <th>HILO LINES</th>
+                <th>HILO</th>
+                <th>MNL</th>
+                <th>WNM</th>
                 <th>ABSENCE STATE</th>
             </tr>
             <tr ng-repeat="product in productList | filter:filterMatchCode | orderBy:orderProp" id="{{product.id}}"
@@ -79,12 +79,12 @@
                 <td>{{product.matchLeague}}</td>
                 <td>{{product.homeTeam}}</td>
                 <td>{{product.awayTeam}}</td>
-                <td>{{product.handicapLine}}</td>
-                <td>{{product.had}}</td>
-                <td>{{product.hhad}}</td>
-                <td>{{product.hafu}}</td>
-                <td>{{product.crs}}</td>
-                <td>{{product.ttg}}</td>
+                <td>{{product.hdcLines}}</td>
+                <td>{{product.hdc}}</td>
+                <td>{{product.hiloLines}}</td>
+                <td>{{product.hilo}}</td>
+                <td>{{product.mnl}}</td>
+                <td>{{product.wnm}}</td>
                 <td><span class="label label-danger">{{product.absenceState}}</span></td>
             </tr>
         </table>
@@ -110,7 +110,11 @@
             }
             return element.matchCode.indexOf($scope.query) != -1 ? true : false;
         };
-        $http.get('listProduct.do?startDate=' + $("#startDate").val() + "&endDate=" + $("#endDate").val())
+       
+       
+        var firstLoad = function () {
+       
+       		 $http.get('listBasketballProduct.do?startDate=' + $("#startDate").val() + "&endDate=" + $("#endDate").val())
                 .success(function (response) {
                     $.each(response, function (i, value) {
                         if (value.absenceState == "1") {
@@ -123,6 +127,13 @@
                     $scope.total = $scope.productList.length;
                     $scope.loading = false;
                 });
+       
+       }
+       
+     
+       firstLoad();
+       
+       
         $scope.chooseProduct = function (product) {
             if (product.choose) {
                 product.choose = false;
@@ -171,13 +182,17 @@
             });
         }
         $scope.orderProp = 'matchCode';
+       
+       
+       
+       
         $scope.refresh = function () {
             if (!$scope.validate($("#startDate").val(), $("#endDate").val())) {
                 return;
             }
             $("#refreshBtn").attr("disabled", true);
             $scope.loading = true;
-            $http.get('listProduct.do?startDate=' + $("#startDate").val() + "&endDate=" + $("#endDate").val())
+            $http.get('listBasketballProduct.do?startDate=' + $("#startDate").val() + "&endDate=" + $("#endDate").val())
                     .success(function (response) {
                         $.each(response, function (i, value) {
                             if (value.absenceState == "1") {
@@ -192,6 +207,8 @@
                         $scope.loading = false;
                     });
         }
+      
+      
         $scope.exportExcel = function () {
             var data = [];
             var product = {};
@@ -201,25 +218,27 @@
             productModelHead.matchLeague = "match_league";
             productModelHead.homeTeam = "home_team";
             productModelHead.awayTeam = "away_team";
-            productModelHead.HAD = "HAD";
-            productModelHead.HHAD = "HHAD";
-            productModelHead.HAFU = "HAFU";
-            productModelHead.CRS = "CRS";
-            productModelHead.TTG = "TTG";
-            productModelHead.handicapLine = "handicap_line";
-            data.push(productModelHead);//添加新内容
+            productModelHead.hdcLines = "hdc_lines";
+            productModelHead.hdc = "HDC";
+            productModelHead.hiloLines = "hilo_lines";
+            productModelHead.hilo = "HILO";
+            productModelHead.mnl = "MNL";
+            productModelHead.wnm = "WNM";
+            //data.push(productModelHead);
+          
             $.each($scope.productList, function (i, value) {
                 if (value.choose) {
                     data.push(value);
                 }
             });
             
+             
             $.ajax({
                 type: "POST",
-                url: "matchProductExcel.do",
+                url: "matchBasketballProductExcel.do",
                 data: {
                     "productModels": JSON.stringify(data)
-                },
+                },   
                 dataType: "json",
                 success: function (data) {
                     window.open("download.do?downloadname=" + data.fileName);
@@ -228,7 +247,10 @@
                     alert(XMLHttpRequest + txtStatus + errorThrown);
                 }
             });
-        }
+        } 
+        
+        
+        
         $scope.validate = function (start, end) {
             if (start == "") {
                 alert("start date can not be null");

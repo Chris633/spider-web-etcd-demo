@@ -71,12 +71,12 @@ public class SpiderManagerApplication{
     }
 
     public static void main(String[] args) throws Exception {
-    	 try {
-    	 	RegisterOnEtcd.register();
-    	 } catch(InterruptedException | ExecutionException | UnknownHostException e){
-    	 	System.out.println(e);
-    	 	System.exit(1);
-    	 }
+	   	try {
+	   		RegisterOnEtcd.register();
+	 	} catch(InterruptedException | ExecutionException | UnknownHostException e){
+	 	 	System.out.println(e);
+	 	 	System.exit(1);
+	 	}
         SpringApplication.run(SpiderManagerApplication.class, args);
     }
 

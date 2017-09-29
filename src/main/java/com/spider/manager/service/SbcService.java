@@ -36,4 +36,8 @@ public interface SbcService {
     JsonResult syncOdds(String id);
     
     String queryNowgoalURL(String matchCode);
+    
+    JsonResult syncBasketball(String uniqueId, Integer type);
+    
+    JsonResult syncBasketballOdds(String id);
 }

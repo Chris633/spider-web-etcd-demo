@@ -1,14 +1,10 @@
 package com.spider.utils;
 
-import org.apache.log4j.Logger;
-
 import com.spider.db.entity.CompanyOddsEntity;
 import com.spider.domain.UpdateHdcOdds;
 import com.spider.domain.UpdateHiloOdds;
 
 public class CaiexOddsUtils {
-
-    private static final Logger ERROR_LOGGER = LogHelper.getErrorLogger();
 
 //    private static CXll a;
 //

@@ -14,12 +14,16 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.spider.db.entity.BasketballOddsAllEntity;
+import com.spider.db.entity.BasketballSportteryEntity;
 import com.spider.db.entity.CompanyOddsEntity;
 import com.spider.db.entity.CompanyOddsHistoryEntity;
 import com.spider.db.entity.OddsModel;
 import com.spider.db.entity.SportteryAllEntity;
 import com.spider.db.entity.TCrawlerSporttery;
 import com.spider.db.entity.TCrawlerWin310;
+import com.spider.db.repository.BasketballOddsAllRepository;
+import com.spider.db.repository.BasketballSportteryRepository;
 import com.spider.db.repository.CompanyOddsHistoryRepository;
 import com.spider.db.repository.CompanyOddsRepository;
 import com.spider.db.repository.OddsModelRepository;
@@ -96,15 +100,12 @@ public class MatchOddsServiceImpl implements MatchOddsServcie {
         List<String> uniqueIds = LotteryUtils.getUniqueId(sportteryList);
         List<String> absenceMatchSet = matchService.getAbsenceUniqueId(uniqueIds);
         for (TCrawlerSporttery sporttery : sportteryList) {
-//            TCrawlerWin310 win310 = win310Repository.findTop1ByCompetitionNumOrderByStartDateTimeDesc(sporttery.getCompetitionNum());
         	TCrawlerWin310 win310 = null;
         	try {
         		win310 = win310Repository.findByUniqueId(sporttery.getUniqueId());
 			} catch (NonUniqueResultException | IncorrectResultSizeDataAccessException e) {
 				win310Repository.deleteNonUniqueResult();
-//				e.printStackTrace();
-//				dupicateLogger.error("duplicate win310Entity " + win310.getWin310EuropeId(), e);
-				dupicateLogger.error("duplicate win310Entity " + sporttery.getUniqueId(), e);
+				dupicateLogger.error("duplicate win310Entity. uniqueId:" + sporttery.getUniqueId(), e);
 				continue ;
 			}
         	
@@ -279,100 +280,6 @@ public class MatchOddsServiceImpl implements MatchOddsServcie {
         }
     }
 
-//    @Override
-//    public Map<String, SupAndTtgModel> calcSupAndTtg(OddsModel oddsModel) {
-//
-//        Map<String/*liji, jbb*/, SupAndTtgModel> map = Maps.newHashMap();
-//        LogHelper.infoLog(infoLogger, null, "start calc sup and ttg, oddsModel={0} ", oddsModel);
-//        double duration = 0.0;
-//        String durationTime = oddsModel.getDurationTime();
-//        if (!StringUtils.isBlank(durationTime)) {
-//            try {
-//                duration = Double.valueOf(durationTime);
-//            } catch (NumberFormatException e) {
-//            }
-//        }
-//        double homeScore = 0.0;
-//        double awayScore = 0.0;
-//        String score = oddsModel.getScore();
-//        String[] socres = score.split("-");
-//        if (score.length() > 1) {
-//            if (StringUtils.isNotBlank(socres[ODDS_TYPE_HAD])) {
-//                try {
-//                    homeScore = Double.valueOf(socres[ODDS_TYPE_HAD].trim());
-//                } catch (NumberFormatException e) {
-//                }
-//            }
-//            if (StringUtils.isNotBlank(socres[1])) {
-//                try {
-//                    awayScore = Double.valueOf(socres[1].trim());
-//                } catch (NumberFormatException e) {
-//                }
-//            }
-//        }
-//        //~~~~~~~~~~~~~~~~~~~~~~liji~~~~~~~~~~~~~~~~~~~~~~~~
-//        double[][] supAndTtg;
-//        try {
-//            String hdcHome = oddsModel.getLijiHdcHome();
-//            String hdcLine = oddsModel.getLijiHdcLine();
-//            String hdcAway = oddsModel.getLijiHdcAway();
-//            String hiloHigh = oddsModel.getLijiHiloH();
-//            String hiloLine = oddsModel.getLijiHiloLine();
-//            String hiloLow = oddsModel.getLijiHiloL();
-//            supAndTtg = CaiexOddsUtils.calcSUPandTTG(
-//                    Double.valueOf(hdcHome),
-//                    Double.valueOf(hdcLine),
-//                    Double.valueOf(hdcAway),
-//                    Double.valueOf(hiloHigh),
-//                    Double.valueOf(hiloLine),
-//                    Double.valueOf(hiloLow),
-//                    duration, homeScore, awayScore);
-//        } catch (NumberFormatException e) {
-//            LogHelper.errorLog(errorLogger, e, "calc sup and ttg error");
-//            return null;
-//        } catch (MWException e) {
-//            LogHelper.errorLog(errorLogger, e, "calc sup and ttg error");
-//            return null;
-//        } catch (Exception e) {
-//            LogHelper.errorLog(errorLogger, e, "calc sup and ttg runtime error");
-//            return null;
-//        }
-//        map.put("liji", new SupAndTtgModel(
-//                new BigDecimal(supAndTtg[0][0]).setScale(2, RoundingMode.HALF_DOWN).toString(),
-//                new BigDecimal(supAndTtg[0][1]).setScale(2, RoundingMode.HALF_DOWN).toString()));
-//        //~~~~~~~~~~~~~~~~~~~~~~jinbaobo~~~~~~~~~~~~~~~~~~~~~~~
-//        double[][] supAndTtg1;
-//        try {
-//            String hdcHome1 = oddsModel.getJinbaoboHdcHome();
-//            String hdcLine1 = oddsModel.getJinbaoboHdcLine();
-//            String hdcAway1 = oddsModel.getJinbaoboHdcAway();
-//            String hiloHigh1 = oddsModel.getJinbaoboHiloH();
-//            String hiloLine1 = oddsModel.getJinbaoboHiloLine();
-//            String hiloLow1 = oddsModel.getJinbaoboHiloL();
-//            supAndTtg1 = CaiexOddsUtils.calcSUPandTTG(
-//                    Double.valueOf(hdcHome1),
-//                    Double.valueOf(hdcLine1),
-//                    Double.valueOf(hdcAway1),
-//                    Double.valueOf(hiloHigh1),
-//                    Double.valueOf(hiloLine1),
-//                    Double.valueOf(hiloLow1),
-//                    duration, homeScore, awayScore);
-//        } catch (NumberFormatException e) {
-//            LogHelper.errorLog(errorLogger, e, "calc sup and ttg error");
-//            return null;
-//        } catch (MWException e) {
-//            LogHelper.errorLog(errorLogger, e, "calc sup and ttg error");
-//            return null;
-//        } catch (Exception e) {
-//            LogHelper.errorLog(errorLogger, e, "calc sup and ttg runtime error");
-//            return null;
-//        }
-//        map.put("jinbaobo", new SupAndTtgModel(
-//                new BigDecimal(supAndTtg1[0][0]).setScale(2, RoundingMode.HALF_DOWN).toString(),
-//                new BigDecimal(supAndTtg1[0][1]).setScale(2, RoundingMode.HALF_DOWN).toString()));
-//        return map;
-//    }
-//
     @Override
     public List<ExcelOddsModel> getExcelOddsModels(Date start, Date end, String league) {
 
@@ -476,4 +383,30 @@ public class MatchOddsServiceImpl implements MatchOddsServcie {
         }
         return excelOddsModel;
     }
+    
+    @Autowired
+    private BasketballSportteryRepository basketballSportteryRepository;
+
+    @Autowired
+    private BasketballOddsAllRepository basketballOddsAllRepository;
+
+    @Override
+	public List<BasketballOddsAllEntity> listBasketballOdds(Date startDate, Date endDate) {
+		List<BasketballSportteryEntity> basketballSportteryEntities = basketballSportteryRepository.findByStartDateBetween(startDate, endDate);
+		
+		List<BasketballOddsAllEntity> basketballOddsAllEntities = Lists.newLinkedList();
+		
+		for (BasketballSportteryEntity basketballSportteryEntity : basketballSportteryEntities) {
+			try {
+				BasketballOddsAllEntity basketballOddsAllEntity = basketballOddsAllRepository.findByUniqueId(basketballSportteryEntity.getUniqueId());
+
+				basketballOddsAllEntity.setBasketballSportteryEntity(basketballSportteryEntity);
+
+				basketballOddsAllEntities.add(basketballOddsAllEntity);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return basketballOddsAllEntities;
+	}
 }

@@ -1,12 +1,12 @@
 package com.spider.db.repository;
 
-import com.spider.db.entity.W500Entity;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.spider.db.entity.W500Entity;
 
 public interface W500Repository extends JpaRepository<W500Entity, Long> {
 
@@ -15,7 +15,7 @@ public interface W500Repository extends JpaRepository<W500Entity, Long> {
      * @return
      */
     @Query(nativeQuery = true, value = "select * from w500 where unique_id = :uniqueId order by match_time desc limit 0,1")
-    W500Entity findByMatchCode(@Param("uniqueId") String uniqueId);
+    W500Entity findByUniqueId(@Param(value = "uniqueId") Long uniqueId);
     
     @Modifying
     @Transactional

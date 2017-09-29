@@ -1,5 +1,6 @@
 package com.spider.manager.service;
 
+import com.spider.manager.model.BasketballProductModel;
 import com.spider.manager.model.ProductModel;
 
 import java.util.Date;
@@ -16,4 +17,9 @@ public interface MatchProductService {
      * @return
      */
     List<ProductModel> listMatchProduct(Date startDate, Date endDate);
+    
+    /**
+     * 列出所有篮球奖池
+     */
+    List<BasketballProductModel> listBasketballMatchProduct(Date startDate, Date endDate);
 }

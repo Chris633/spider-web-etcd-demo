@@ -1,5 +1,8 @@
 package com.spider.manager.service;
 
+import java.util.List;
+
+import com.spider.db.entity.BasketballSbcLeague;
 import com.spider.db.entity.TCrawlerSporttery;
 
 public interface SbcLeagueService {
@@ -11,4 +14,9 @@ public interface SbcLeagueService {
      * @return 查不到或者数据库异常返回sporttery的名称，否则返回我们的名称
      */
     String getLeagueName(TCrawlerSporttery sporttery);
+    
+    List<BasketballSbcLeague> findAllBasketballLeagues();
+    
+    void modifyBasketballLeague(String basketballLeague);
+    
 }
