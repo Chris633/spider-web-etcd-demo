@@ -1,5 +1,5 @@
 # spider-web-etcd-demo
-将spider-web注册到etcd
+将spider-web注册到etcd（篮球的spider-web在basketball分支下）
 
 <br />
 
